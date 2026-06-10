@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!93736269811446740 &1
+EditorSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 10
+  m_SerializationMode: 2
+  m_LineEndingsForNewScripts: 2
+  m_DefaultBehaviorMode: 0
+  m_SpritePackerMode: 4
+  m_SpritePackerPaddingPower: 1
+  m_EtcTextureCompressorBehavior: 0
+  m_EtcTextureFastCompressor: 2
+  m_EtcTextureNormalCompressor: 2
+  m_EtcTextureBestCompressor: 4
+  m_ProjectGenerationIncludedExtensions: txt;xml;fnt;cd;asmref
+  m_ProjectGenerationRootNamespace: 
+  m_EnableTextureStreamingInEditMode: 1
+  m_EnableTextureStreamingInPlayMode: 1
+  m_AsyncShaderCompilation: 1
+  m_CachingShaderPreprocessor: 1
+  m_PrefabModeAllowAutoSave: 1
+  m_EnterPlayModeOptions:
+    m_Enabled: 0
+    m_Options: 3
+  m_ShowLightmapResolutionOverlay: 1
+  m_UseLegacyProbeSampleCount: 0
+  m_SerializeInlineMappingsOnOneLine: 1

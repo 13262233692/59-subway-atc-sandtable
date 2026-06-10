@@ -1,0 +1,14 @@
+{
+  "name": "CBTC.Sandtable.Runtime",
+  "rootNamespace": "CBTC.Sandtable",
+  "references": [],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

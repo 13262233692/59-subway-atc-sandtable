@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!129 &1
+PlayerSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 23
+  productGUID: a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6
+  AndroidProfiler: 0
+  AndroidFilterTouchesWhenObscured: 0
+  AndroidEnableSustainedPerformanceMode: 0
+  defaultScreenOrientation: 4
+  targetDevice: 2
+  useOnDemandResources: 0
+  accelerometerFrequency: 60
+  companyName: CBTC
+  productName: SubwayATCSandtable
+  defaultCursor: {instanceID: 0}
+  cursorHotspot: {x: 0, y: 0}
+  m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
+  m_ShowUnitySplashScreen: 1
+  m_ShowUnitySplashLogo: 1
+  m_SplashScreenOverlayOpacity: 1
+  m_SplashScreenAnimation: 1
+  m_SplashScreenLogoStyle: 1
+  m_SplashScreenDrawMode: 0
+  m_SplashScreenBackgroundAnimationZoom: 1
+  m_SplashScreenLogoAnimationZoom: 1
+  m_SplashScreenBackgroundLandscapeAspect: 1
+  m_SplashScreenBackgroundPortraitAspect: 1
+  scriptingBackend:
+    Standalone: 0
+  il2cppCompilerConfiguration:
+    Standalone: 0
+  managedStrippingLevel:
+    Standalone: 1
+  incrementalIl2cppBuild:
+    Standalone: 1
+  scriptingDefineSymbols:
+    Standalone: 
+  playerGraphicsAPI:
+    Standalone:
+    - 3
+  gpuSkinning: 1
+  graphicsJobs: 1
+  graphicsJobsMode: 2
+  m_ScriptingRuntimeVersion: 1
+  m_MonoStrippingLevel: 1
+  m_Il2CppStrippingLevel: 1
