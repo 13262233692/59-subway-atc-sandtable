@@ -38,6 +38,10 @@ namespace CBTC.Sandtable.Track
         [SerializeField] private Vector3 _position;
         [SerializeField] private NodeType _nodeType;
         [SerializeField] private List<TrackConnection> _connections = new List<TrackConnection>();
+        [SerializeField] private bool _isLocked;
+        [SerializeField] private string _lockedByTrainId;
+        [SerializeField] private string _lockedByRouteId;
+        [SerializeField] private float _lockTime;
 
         public string NodeId => _nodeId;
         public string NodeName => _nodeName;
@@ -45,6 +49,10 @@ namespace CBTC.Sandtable.Track
         public NodeType Type => _nodeType;
         public List<TrackConnection> Connections => _connections;
         public int ConnectionCount => _connections.Count;
+        public bool IsLocked => _isLocked;
+        public string LockedByTrainId => _lockedByTrainId;
+        public string LockedByRouteId => _lockedByRouteId;
+        public float LockTime => _lockTime;
 
         public void Initialize(string nodeId, string nodeName, Vector3 position, NodeType nodeType)
         {
@@ -93,6 +101,22 @@ namespace CBTC.Sandtable.Track
         public bool IsSwitchable()
         {
             return _nodeType == NodeType.Turnout || _nodeType == NodeType.Crossover;
+        }
+
+        public void SetLocked(bool locked, string trainId = null, string routeId = null)
+        {
+            _isLocked = locked;
+            _lockedByTrainId = locked ? trainId : null;
+            _lockedByRouteId = locked ? routeId : null;
+            _lockTime = locked ? Time.time : 0f;
+        }
+
+        public void ForceUnlock()
+        {
+            _isLocked = false;
+            _lockedByTrainId = null;
+            _lockedByRouteId = null;
+            _lockTime = 0f;
         }
     }
 }

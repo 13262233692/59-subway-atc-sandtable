@@ -21,6 +21,12 @@ namespace CBTC.Sandtable.Core
         private float _demoTime;
         private List<string> _stationNodeIds = new List<string>();
         private List<string> _segmentIds = new List<string>();
+        private string _routeFromNodeId = "";
+        private string _routeToNodeId = "";
+        private string _lastRouteResult = "";
+        private string _lastRouteId = "";
+        private int _selectedFromIdx;
+        private int _selectedToIdx;
 
         public string ScenarioInfo =>
             $"Trains: {_trainCount}, Speed: {_lineSpeed:F1} m/s, Headway: {_headway:F0}s, Stations: {_stationCount}";
@@ -254,7 +260,7 @@ namespace CBTC.Sandtable.Core
         {
             if (!_scenarioStarted) return;
 
-            GUILayout.BeginArea(new Rect(10, 10, 420, 600));
+            GUILayout.BeginArea(new Rect(10, 10, 440, 650));
             GUILayout.BeginVertical("box");
 
             GUILayout.Label("<b>CBTC Subway ATC Sandtable</b>", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 16 });
@@ -288,11 +294,152 @@ namespace CBTC.Sandtable.Core
                 }
             }
 
-            GUILayout.Space(10);
+            GUILayout.Space(8);
+            DrawInterlockingPanel();
+
+            GUILayout.Space(8);
             GUILayout.Label("[Space] Pause/Resume  [+/-] Time Scale  [E] Emergency  [R] Restart");
 
             GUILayout.EndVertical();
             GUILayout.EndArea();
+
+            if (!string.IsNullOrEmpty(_lastRouteResult) && _controller.Interlocking != null)
+            {
+                GUILayout.BeginArea(new Rect(460, 10, 400, 300));
+                GUILayout.BeginVertical("box");
+                GUILayout.Label("<b>Interlocking Console</b>", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 14 });
+                GUILayout.Space(4);
+
+                var alerts = _controller.GetInterlockingAlerts();
+                int alertShow = Mathf.Min(alerts.Count, 5);
+                for (int i = alerts.Count - 1; i >= alerts.Count - alertShow; i--)
+                {
+                    GUI.color = alerts[i].severity == AlertSeverity.Critical ? Color.red :
+                                alerts[i].severity == AlertSeverity.Emergency ? new Color(1f, 0.3f, 0f) :
+                                Color.yellow;
+                    GUILayout.Label(alerts[i].message);
+                }
+                GUI.color = Color.white;
+
+                GUILayout.Space(4);
+                GUILayout.Label(_lastRouteResult);
+
+                if (!string.IsNullOrEmpty(_lastRouteId) && GUILayout.Button("Release Last Route"))
+                {
+                    _controller.ReleaseInterlockingRoute(_lastRouteId);
+                    _lastRouteId = "";
+                }
+
+                GUILayout.EndVertical();
+                GUILayout.EndArea();
+            }
+        }
+
+        private void DrawInterlockingPanel()
+        {
+            GUILayout.Label("<b>Interlocking Route Request</b>", new GUIStyle(GUI.skin.label) { richText = true, fontSize = 13 });
+            GUILayout.Space(3);
+
+            if (_stationNodeIds.Count < 2) return;
+
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("From:", GUILayout.Width(40));
+            if (GUILayout.Button(_stationNodeIds[_selectedFromIdx], GUILayout.Width(120)))
+            {
+                _selectedFromIdx = (_selectedFromIdx + 1) % _stationNodeIds.Count;
+            }
+            GUILayout.Label("To:", GUILayout.Width(25));
+            if (GUILayout.Button(_stationNodeIds[_selectedToIdx], GUILayout.Width(120)))
+            {
+                _selectedToIdx = (_selectedToIdx + 1) % _stationNodeIds.Count;
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(3);
+            GUILayout.BeginHorizontal();
+
+            if (GUILayout.Button("Request Route", GUILayout.Height(28)))
+            {
+                if (_selectedFromIdx != _selectedToIdx)
+                {
+                    string fromId = _stationNodeIds[_selectedFromIdx];
+                    string toId = _stationNodeIds[_selectedToIdx];
+                    InterlockingPathResult result = _controller.RequestInterlockingRoute(fromId, toId);
+                    if (result != null)
+                    {
+                        if (result.IsSuccess)
+                        {
+                            _lastRouteId = _controller.Interlocking.ActiveRoutes.Count > 0 ?
+                                GetLatestRouteId() : "";
+                            _lastRouteResult = $"<color=green>ROUTE ESTABLISHED: {fromId} → {toId}\nDistance: {result.totalDistance:F0}m | Segments: {result.segments.Count}</color>";
+                        }
+                        else
+                        {
+                            _lastRouteResult = $"<color=red>ROUTE REJECTED: {result.resultType}\n{BuildResultDetail(result)}</color>";
+                        }
+                    }
+                }
+            }
+
+            if (GUILayout.Button("Preview", GUILayout.Height(28)))
+            {
+                if (_selectedFromIdx != _selectedToIdx)
+                {
+                    string fromId = _stationNodeIds[_selectedFromIdx];
+                    string toId = _stationNodeIds[_selectedToIdx];
+                    InterlockingPathResult result = _controller.PreviewRoute(fromId, toId);
+                    if (result != null)
+                    {
+                        _lastRouteResult = result.IsSuccess
+                            ? $"PREVIEW OK: {fromId} → {toId} | {result.totalDistance:F0}m | {result.segments.Count} segs"
+                            : $"PREVIEW FAIL: {result.resultType}";
+                    }
+                }
+            }
+
+            GUILayout.EndHorizontal();
+
+            if (_controller.Interlocking != null)
+            {
+                GUILayout.Space(3);
+                int activeRoutes = _controller.Interlocking.ActiveRoutes.Count;
+                int lockedNodes = _controller.Interlocking.NodeLocks.Count;
+                GUILayout.Label($"Active Routes: {activeRoutes} | Locked Nodes: {lockedNodes}");
+            }
+        }
+
+        private string GetLatestRouteId()
+        {
+            string latest = "";
+            float latestTime = 0f;
+            foreach (var kvp in _controller.Interlocking.ActiveRoutes)
+            {
+                if (kvp.Value.establishedTime > latestTime)
+                {
+                    latestTime = kvp.Value.establishedTime;
+                    latest = kvp.Key;
+                }
+            }
+            return latest;
+        }
+
+        private string BuildResultDetail(InterlockingPathResult result)
+        {
+            switch (result.resultType)
+            {
+                case PathfindingResultType.NodeLocked:
+                    return $"Node {result.conflictNodeId} LOCKED by train {result.lockedByTrainId}";
+                case PathfindingResultType.OpposingRouteConflict:
+                    return $"OPPOSING route {result.conflictingRouteId} at seg {result.conflictSegmentId}";
+                case PathfindingResultType.TrackCircuitOccupied:
+                    return $"Track circuit OCCUPIED at seg {result.conflictSegmentId}";
+                case PathfindingResultType.SegmentConflict:
+                    return $"Segment {result.conflictSegmentId} ALREADY ALLOCATED";
+                case PathfindingResultType.NoPath:
+                    return "No valid path found";
+                default:
+                    return result.resultType.ToString();
+            }
         }
     }
 }

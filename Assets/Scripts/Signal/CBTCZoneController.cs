@@ -44,6 +44,7 @@ namespace CBTC.Sandtable.Signal
     {
         [SerializeField] private TrackNetwork _trackNetwork;
         [SerializeField] private MovingBlockController _movingBlockController;
+        [SerializeField] private InterlockingController _interlockingController;
         [SerializeField] private float _updateInterval = 0.5f;
 
         private SignalAuthorityManager _authorityManager = new SignalAuthorityManager();
@@ -55,6 +56,7 @@ namespace CBTC.Sandtable.Signal
 
         public TrackNetwork TrackNetwork => _trackNetwork;
         public MovingBlockController MovingBlockController => _movingBlockController;
+        public InterlockingController Interlocking => _interlockingController;
         public SignalAuthorityManager AuthorityManager => _authorityManager;
         public List<TrackCircuit> TrackCircuits => _trackCircuits;
 
@@ -67,6 +69,15 @@ namespace CBTC.Sandtable.Signal
             if (_movingBlockController == null)
             {
                 _movingBlockController = FindObjectOfType<MovingBlockController>();
+            }
+            if (_interlockingController == null)
+            {
+                _interlockingController = FindObjectOfType<InterlockingController>();
+            }
+
+            if (_interlockingController != null && _trackNetwork != null)
+            {
+                _interlockingController.Initialize(_trackNetwork, this);
             }
 
             _trackCircuits.Clear();

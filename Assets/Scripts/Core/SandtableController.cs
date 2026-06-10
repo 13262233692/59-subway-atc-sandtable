@@ -28,6 +28,7 @@ namespace CBTC.Sandtable.Core
         public TrackNetwork TrackNetwork => _trackNetwork;
         public CBTCZoneController ZoneController => _zoneController;
         public MovingBlockController MovingBlockController => _movingBlockController;
+        public InterlockingController Interlocking => _zoneController != null ? _zoneController.Interlocking : null;
         public float SimulationTime => _simulationTime;
         public float SimulationTimeScale
         {
@@ -231,6 +232,30 @@ namespace CBTC.Sandtable.Core
         {
             if (_zoneController != null)
                 _zoneController.ReportEmergency(trainId, reason);
+        }
+
+        public InterlockingPathResult RequestInterlockingRoute(string startNodeId, string endNodeId, string trainId = null)
+        {
+            if (_zoneController == null || _zoneController.Interlocking == null) return null;
+            return _zoneController.Interlocking.RequestRoute(startNodeId, endNodeId, trainId);
+        }
+
+        public void ReleaseInterlockingRoute(string routeId)
+        {
+            if (_zoneController == null || _zoneController.Interlocking == null) return;
+            _zoneController.Interlocking.ReleaseRoute(routeId);
+        }
+
+        public InterlockingPathResult PreviewRoute(string startNodeId, string endNodeId, string trainId = null)
+        {
+            if (_zoneController == null || _zoneController.Interlocking == null) return null;
+            return _zoneController.Interlocking.FindPathOnly(startNodeId, endNodeId, trainId);
+        }
+
+        public List<InterlockingAlert> GetInterlockingAlerts()
+        {
+            if (_zoneController == null || _zoneController.Interlocking == null) return new List<InterlockingAlert>();
+            return _zoneController.Interlocking.GetAlertHistory();
         }
 
         public TrainRuntimeInfo GetTrainInfo(string trainId)
