@@ -155,11 +155,11 @@ namespace CBTC.Sandtable.Signal
 
                 if (safeSpeed < 0.01f)
                 {
-                    train.UpdateMovement(deltaTime, 0f);
+                    train.FixedUpdateMovement(deltaTime, 0f);
                 }
                 else
                 {
-                    train.UpdateMovement(deltaTime, safeSpeed);
+                    train.FixedUpdateMovement(deltaTime, safeSpeed);
                 }
             }
         }

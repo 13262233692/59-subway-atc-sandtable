@@ -138,11 +138,11 @@ namespace CBTC.Sandtable.Core
 
             Vector3 dir = (end - start).normalized;
 
-            float lateralOffset = Mathf.Sin(segIndex * 1.5f) * 30f;
+            float lateralOffset = Mathf.Sin(segIndex * 1.5f) * 80f;
             Vector3 lateral = Vector3.Cross(dir, Vector3.up).normalized * lateralOffset;
 
             Vector3 cp1 = start + dir * midDist + lateral + Vector3.up * GetElevation(segIndex, midDist);
-            Vector3 cp2 = start + dir * midDist2 - lateral * 0.5f + Vector3.up * GetElevation(segIndex, midDist2);
+            Vector3 cp2 = start + dir * midDist2 - lateral * 0.7f + Vector3.up * GetElevation(segIndex, midDist2);
 
             spline.AddPoint(cp1);
             spline.AddPoint(cp2);
@@ -153,7 +153,7 @@ namespace CBTC.Sandtable.Core
 
         private float GetElevation(int segIndex, float distance)
         {
-            return Mathf.Sin(segIndex * 0.5f + distance * 0.001f) * 3f;
+            return Mathf.Sin(segIndex * 0.5f + distance * 0.002f) * 8f;
         }
 
         private void BuildSegmentSections(TrackSegment segment, float segLen)

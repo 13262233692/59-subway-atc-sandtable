@@ -23,6 +23,9 @@ namespace CBTC.Sandtable.Train
 
         public float wheelAdhesionCoeff = 0.2f;
 
+        public float derailmentCurvatureThreshold = 0.01f;
+        public float maxDistancePerPhysicsStep = 2f;
+
         private const float LateralCentripetalAccel = 0.65f;
 
         public float CalculateMaxSpeedAtCurvature(float curvatureRadius)

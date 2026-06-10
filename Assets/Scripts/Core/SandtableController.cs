@@ -20,7 +20,10 @@ namespace CBTC.Sandtable.Core
         private Dictionary<string, TrainInstance> _trains = new Dictionary<string, TrainInstance>();
         private List<string> _trainOrder = new List<string>();
         private float _simulationTime;
+        private float _physicsAccumulator;
         private bool _initialized;
+
+        private const float FixedPhysicsStep = 0.02f;
 
         public TrackNetwork TrackNetwork => _trackNetwork;
         public CBTCZoneController ZoneController => _zoneController;
@@ -47,16 +50,55 @@ namespace CBTC.Sandtable.Core
         {
             if (_pauseSimulation || !_initialized) return;
 
-            float dt = Time.deltaTime * _simulationTimeScale;
-            _simulationTime += dt;
+            float frameDt = Time.deltaTime * _simulationTimeScale;
+            _simulationTime += frameDt;
+            _physicsAccumulator += frameDt;
 
+            _physicsAccumulator = Mathf.Min(_physicsAccumulator, FixedPhysicsStep * 5f);
+
+            while (_physicsAccumulator >= FixedPhysicsStep)
+            {
+                PhysicsFixedTick(FixedPhysicsStep);
+                _physicsAccumulator -= FixedPhysicsStep;
+            }
+        }
+
+        private void PhysicsFixedTick(float fixedDt)
+        {
             if (_movingBlockController != null)
                 _movingBlockController.UpdateTrainPositions();
 
             if (_zoneController != null)
-                _zoneController.OnFixedUpdate(dt);
+                _zoneController.OnFixedUpdate(fixedDt);
 
-            UpdateTrains(dt);
+            for (int i = 0; i < _trainOrder.Count; i++)
+            {
+                if (!_trains.TryGetValue(_trainOrder[i], out TrainInstance instance)) continue;
+
+                float atoTargetSpeed = instance.atoController.ComputeTargetSpeed(fixedDt);
+                float finalTargetSpeed = atoTargetSpeed;
+
+                if (_movingBlockController != null)
+                {
+                    string tid = instance.splineController.gameObject.GetInstanceID().ToString();
+                    MovementAuthority ma = _movingBlockController.GetMovementAuthority(tid);
+                    if (ma.authorityType == AuthorityType.Stop)
+                        finalTargetSpeed = 0f;
+                    else if (ma.authorityType == AuthorityType.Restricted)
+                        finalTargetSpeed = Mathf.Min(atoTargetSpeed, ma.maxSpeed);
+                }
+
+                instance.splineController.FixedUpdateMovement(fixedDt, finalTargetSpeed);
+
+                if (_zoneController != null)
+                {
+                    _zoneController.HandleTrainPositionUpdate(
+                        instance.trainId,
+                        instance.splineController.CurrentSegmentId,
+                        instance.splineController.CurrentDistance,
+                        instance.splineController.CurrentSpeed);
+                }
+            }
         }
 
         public void Initialize()
@@ -114,6 +156,7 @@ namespace CBTC.Sandtable.Core
 
             TrainPhysicsConfig config = _defaultTrainConfig;
             splineCtrl.Configure(config, _trackNetwork);
+            splineCtrl.SetCarriageCount(6, config.length);
             splineCtrl.Initialize(segment, startDistance, startSpeed);
 
             ATOController atoCtrl = trainObj.GetComponent<ATOController>();
@@ -167,7 +210,7 @@ namespace CBTC.Sandtable.Core
             if (!_trains.TryGetValue(trainId, out TrainInstance instance)) return;
 
             instance.atoController.SetMode(ATOMode.Manual);
-            instance.splineController.UpdateMovement(0f, 0f);
+            instance.splineController.FixedUpdateMovement(0f, 0f);
         }
 
         public void EmergencyStopTrain(string trainId)
@@ -244,42 +287,6 @@ namespace CBTC.Sandtable.Core
                 {
                     instance.atoController.RestrictionProfile.AddRestriction(
                         new SpeedRestriction(startDistance, endDistance, speedLimit, type));
-                }
-            }
-        }
-
-        private void UpdateTrains(float dt)
-        {
-            for (int i = 0; i < _trainOrder.Count; i++)
-            {
-                if (!_trains.TryGetValue(_trainOrder[i], out TrainInstance instance)) continue;
-
-                float atoTargetSpeed = instance.atoController.ComputeTargetSpeed(dt);
-                float finalTargetSpeed = atoTargetSpeed;
-
-                if (_movingBlockController != null)
-                {
-                    string tid = instance.splineController.gameObject.GetInstanceID().ToString();
-                    MovementAuthority ma = _movingBlockController.GetMovementAuthority(tid);
-                    if (ma.authorityType == AuthorityType.Stop)
-                    {
-                        finalTargetSpeed = 0f;
-                    }
-                    else if (ma.authorityType == AuthorityType.Restricted)
-                    {
-                        finalTargetSpeed = Mathf.Min(atoTargetSpeed, ma.maxSpeed);
-                    }
-                }
-
-                instance.splineController.UpdateMovement(dt, finalTargetSpeed);
-
-                if (_zoneController != null)
-                {
-                    _zoneController.HandleTrainPositionUpdate(
-                        instance.trainId,
-                        instance.splineController.CurrentSegmentId,
-                        instance.splineController.CurrentDistance,
-                        instance.splineController.CurrentSpeed);
                 }
             }
         }
